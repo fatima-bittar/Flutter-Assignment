@@ -1,8 +1,10 @@
+import 'package:first_project/screens/add_meal.dart';
 import 'package:flutter/material.dart';
 import '../models/meal_model.dart';
 import '../services/meal_services.dart';
 import './meals_details.dart';
 import '../utils/database_helper.dart';
+import '../navigation/routes.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -120,12 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: Text(meal.strMeal ?? "Unknown Meal"),
                       subtitle: Text(meal.strCategory ?? "Unknown Category"),
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => MealDetailScreen(meal: meal),
-                          ),
-                        );
+                        Navigator.pushNamed(context, AppRouter.mealDetail);
                       },
                       trailing: IconButton(
                         icon: const Icon(Icons.delete),
@@ -138,6 +135,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             ),
+          FloatingActionButton(
+            onPressed: () async {
+              final added = await Navigator.pushNamed(context, AppRouter.addMeal);
+
+              if (added == true) {
+                _fetchMealsFromDb(); // Refresh the list after adding a meal
+              }
+            },
+            child: const Icon(Icons.add),
+          ),
         ],
       ),
     );

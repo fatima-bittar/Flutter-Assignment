@@ -43,7 +43,7 @@ class DatabaseHelper {
   }
 
   // Insert a meal
-  Future<void> insertMeal(Map<String, dynamic> meal) async {
+  Future<void> addMeal(Map<String, dynamic> meal) async {
     final db = await instance.database;
     await db.insert('meals', meal, conflictAlgorithm: ConflictAlgorithm.replace);
     print('Meal inserted: $meal');  // Log message
@@ -70,3 +70,5 @@ class DatabaseHelper {
     getAllMeals();
   }
 }
+
+
