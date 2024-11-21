@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'themes/app_theme.dart';
 import 'navigation/routes.dart';
-import 'package:flutter/material.dart';
 
 
 void main() {

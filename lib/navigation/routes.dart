@@ -14,7 +14,7 @@ class AppRouter {
       case login:
         return MaterialPageRoute(builder: (_) => LoginScreen());
       case home:
-        return MaterialPageRoute(builder: (_) => HomeScreen());
+        return MaterialPageRoute(builder: (_) => const HomeScreen());
       case mealDetail:
       // Retrieve the meal data passed to the route
         final meal = settings.arguments as Meals;

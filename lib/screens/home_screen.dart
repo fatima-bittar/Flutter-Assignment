@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/meal_model.dart';
 import '../services/meal_services.dart';
 import './meals_details.dart';
+import '../utils/database_helper.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,22 +14,22 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // void _fetchMealsFromDb() async {
-  //   final mealsFromDb = await DatabaseHelper.instance.getAllMeals();
-  //   setState(() {
-  //     meals = mealsFromDb.map((meal) => Meals.fromJson(meal)).toList();
-  //   });
-  // }
+  void _fetchMealsFromDb() async {
+    final mealsFromDb = await DatabaseHelper.instance.getAllMeals();
+    setState(() {
+      meals = mealsFromDb.map((meal) => Meals.fromJson(meal)).toList();
+    });
+  }
 
-  // Delete meal by ID
-  // void _deleteMeal(String idMeal) async {
-  //   await DatabaseHelper.instance.deleteMeal(idMeal);
-  //   _fetchMealsFromDb();  // Refresh the list after deletion
-  // }
+  //Delete meal by ID
+  void _deleteMeal(String idMeal) async {
+    await DatabaseHelper.instance.deleteMeal(idMeal);
+    _fetchMealsFromDb();  // Refresh the list after deletion
+  }
   @override
   void initState() {
     super.initState();
-    // _fetchMealsFromDb();// Fetch meals when the screen loads
+    _fetchMealsFromDb();// Fetch meals when the screen loads
   }
 
 
@@ -126,12 +127,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         );
                       },
-                      // trailing: IconButton(
-                      //   icon: const Icon(Icons.delete),
-                      //   onPressed: () {
-                      //     _deleteMeal(meal.idMeal!);  // Delete the meal from the database
-                      //   },
-                      // ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () {
+                          _deleteMeal(meal.idMeal!);  // Delete the meal from the database
+                        },
+                      ),
                     ),
                   );
                 },
