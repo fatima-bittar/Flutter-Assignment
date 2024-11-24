@@ -30,6 +30,7 @@ class Meals {
   String? strMealThumb;
   String? strTags;
   String? strYoutube;
+  int? isUserCreated;
   List<String?> ingredients = [];
   List<String?> measures = [];
 
@@ -42,6 +43,7 @@ class Meals {
     this.strMealThumb,
     this.strTags,
     this.strYoutube,
+    required this.isUserCreated,
     required this.ingredients,
     required this.measures,
   });
@@ -72,7 +74,7 @@ class Meals {
     strMealThumb = json['strMealThumb'];
     strTags = json['strTags'];
     strYoutube = json['strYoutube'];
-
+    isUserCreated = json['isUserCreated'] ?? 0;
     // Dynamically build lists of ingredients and measures
     ingredients = List.generate(20, (index) => json['strIngredient${index + 1}']);
     measures = List.generate(20, (index) => json['strMeasure${index + 1}']);
@@ -87,6 +89,7 @@ class Meals {
     data['strInstructions'] = strInstructions;
     data['strMealThumb'] = strMealThumb;
     data['strTags'] = strTags;
+    data['isUserCreated'] = isUserCreated;
     data['strYoutube'] = strYoutube;
 
     // Convert lists of ingredients and measures into their corresponding map fields
@@ -96,5 +99,39 @@ class Meals {
     }
 
     return data;
+  }
+  // Convert the Meals object to a map for SQLite storage
+  Map<String, dynamic> toMap({bool isUserCreated = false}) {
+    return {
+      'idMeal': idMeal,
+      'strMeal': strMeal,
+      'strCategory': strCategory,
+      'strArea': strArea,
+      'strInstructions': strInstructions,
+      'strMealThumb': strMealThumb,
+      'strTags': strTags,
+      'strYoutube': strYoutube,
+      'isUserCreated': isUserCreated ? 1 : 0, // Store as 1 or 0 for SQLite
+      // Combine ingredients and measures into a string format (e.g., JSON or CSV)
+      'ingredients': ingredients.join(','), // Comma-separated values (you can also use JSON)
+      'measures': measures.join(','),
+    };
+  }
+
+  // Method to convert map data into a Meals object (from the database)
+  factory Meals.fromMap(Map<String, dynamic> map) {
+    return Meals(
+      idMeal: map['idMeal'],
+      strMeal: map['strMeal'],
+      strCategory: map['strCategory'],
+      strArea: map['strArea'],
+      strInstructions: map['strInstructions'],
+      strMealThumb: map['strMealThumb'],
+      strTags: map['strTags'],
+      strYoutube: map['strYoutube'],
+      isUserCreated: map['isUserCreated'] == 1 ? 1 : 0, // Convert back from 1/0 to bool
+      ingredients: map['ingredients']?.split(',') ?? [], // Convert comma-separated values back to list
+      measures: map['measures']?.split(',') ?? [], // Same for measures
+    );
   }
 }

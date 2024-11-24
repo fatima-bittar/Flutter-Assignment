@@ -4,12 +4,14 @@ import '../screens/home_screen.dart'; // Home screen
 import '../screens/meals_details.dart'; // Meal detail screen
 import '../screens/add_meal.dart'; // Add meal screen
 import '../models/meal_model.dart';
+import '../screens/search_screen.dart';
 
 class AppRouter {
   static const String login = '/';
   static const String home = '/home';
   static const String mealDetail = '/meal-detail';
   static const String addMeal = '/add-meal'; // Add meal route
+  static const String searchMeal = '/search-meal';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -24,7 +26,9 @@ class AppRouter {
           builder: (_) => MealDetailScreen(meal: meal),
         );
       case addMeal:
-        return MaterialPageRoute(builder: (_) => const AddMealScreen()); // Add MealScreen route
+        return MaterialPageRoute(builder: (_) => const AddMealScreen());// Add MealScreen route
+      case searchMeal:
+        return MaterialPageRoute(builder: (_) =>  SearchScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(

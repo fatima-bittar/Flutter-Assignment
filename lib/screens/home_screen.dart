@@ -1,64 +1,56 @@
-import 'package:first_project/screens/add_meal.dart';
 import 'package:flutter/material.dart';
 import '../models/meal_model.dart';
 import '../services/meal_services.dart';
-import './meals_details.dart';
-import '../utils/database_helper.dart';
 import '../navigation/routes.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-
   _HomeScreenState createState() => _HomeScreenState();
-
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  void _fetchMealsFromDb() async {
-    final mealsFromDb = await DatabaseHelper.instance.getAllMeals();
-    setState(() {
-      meals = mealsFromDb.map((meal) => Meals.fromJson(meal)).toList();
-    });
-  }
+  List<Meals> _libraryMeals = [];
+  final MealService _mealService = MealService(); // Create an instance of MealService
 
-  //Delete meal by ID
-  void _deleteMeal(String idMeal) async {
-    await DatabaseHelper.instance.deleteMeal(idMeal);
-    _fetchMealsFromDb();  // Refresh the list after deletion
-  }
   @override
   void initState() {
     super.initState();
-    _fetchMealsFromDb();// Fetch meals when the screen loads
+    _fetchLibraryMeals(); // Load meals when the screen is initialized
   }
 
-
-  List<Meals> meals = [];
-  final TextEditingController _searchController = TextEditingController();
-  bool _isLoading = false;
-
-  // Function to trigger the search
-  Future<void> _searchMeals(String mealName) async {
-    setState(() {
-      _isLoading = true;
-    });
-
+  // Fetch meals from the service
+  void _fetchLibraryMeals() async {
     try {
-      MealService mealService = MealService();
-      List<Meals> fetchedMeals = await mealService.getMealsByName(mealName);
+      final allMeals = await _mealService.getAllMeals(); // Use the service to get meals
       setState(() {
-        meals = fetchedMeals;
+        _libraryMeals = allMeals;
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to load meals: $e")),
-      );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      print('Error fetching library meals: $e');
+    }
+  }
+
+  // Delete a meal using the service
+  void _deleteMeal(String idMeal) async {
+    try {
+      await _mealService.deleteMeal(idMeal); // Use the service to delete a meal
+      _fetchLibraryMeals(); // Refresh after deletion
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Meal deleted successfully')));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error deleting meal: $e')));
+    }
+  }
+
+  // Clear all meals from the library using the service
+  void _clearLibrary() async {
+    try {
+      await _mealService.clearDatabase(); // Use the service to clear the database
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Library cleared")));
+      _fetchLibraryMeals(); // Refresh library meals
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to clear library: $e")));
     }
   }
 
@@ -66,83 +58,74 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Meal Application'),
+        title: const Text('My Meal Library'),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
-            onPressed: () {
-              _searchMeals(_searchController.text);
+            onPressed: () async {
+              final result = await Navigator.pushNamed(context, AppRouter.searchMeal);
+              if (result == true) {
+                _fetchLibraryMeals(); // Refresh the library if changes occurred
+              }
             },
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Search Input
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'Search Meals',
-              ),
-              onSubmitted: _searchMeals,
-            ),
-          ),
-          // Loading Indicator
-          if (_isLoading)
-            const CircularProgressIndicator()
-          else
-          // Meal List
-            Expanded(
-              child: meals.isEmpty
-                  ? const Center(
-                child: Text(
-                  "No meals found. Try searching for something else!",
-                  style: TextStyle(fontSize: 16),
-                ),
+      body: _libraryMeals.isEmpty
+          ? const Center(
+        child: Text(
+          "Your library is empty. Add meals from the search screen!",
+          style: TextStyle(fontSize: 16),
+        ),
+      )
+          : ListView.builder(
+        itemCount: _libraryMeals.length,
+        itemBuilder: (context, index) {
+          final meal = _libraryMeals[index];
+          return Card(
+            margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            child: ListTile(
+              leading: meal.strMealThumb != null
+                  ? Image.network(
+                meal.strMealThumb!,
+                width: 50,
+                height: 50,
+                fit: BoxFit.cover,
               )
-                  : ListView.builder(
-                itemCount: meals.length,
-                itemBuilder: (context, index) {
-                  final meal = meals[index];
-                  return Card(
-                    margin: const EdgeInsets.symmetric(
-                        vertical: 8.0, horizontal: 16.0),
-                    child: ListTile(
-                      leading: meal.strMealThumb != null
-                          ? Image.network(
-                        meal.strMealThumb!,
-                        width: 50,
-                        height: 50,
-                        fit: BoxFit.cover,
-                      )
-                          : const Icon(Icons.fastfood),
-                      title: Text(meal.strMeal ?? "Unknown Meal"),
-                      subtitle: Text(meal.strCategory ?? "Unknown Category"),
-                      onTap: () {
-                        Navigator.pushNamed(context, AppRouter.mealDetail);
-                      },
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () {
-                          _deleteMeal(meal.idMeal!);  // Delete the meal from the database
-                        },
-                      ),
-                    ),
-                  );
-                },
+                  : const Icon(Icons.fastfood),
+              title: Text(meal.strMeal ?? "Unknown Meal"),
+              subtitle: Text(meal.strCategory ?? "Unknown Category"),
+              onTap: () {
+                Navigator.pushNamed(context, AppRouter.mealDetail, arguments: meal);
+              },
+              trailing: IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: () => _deleteMeal(meal.idMeal!), // Delete meal using the service
               ),
             ),
+          );
+        },
+      ),
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          // Clear library button
+          FloatingActionButton(
+            onPressed: _clearLibrary,
+            tooltip: "Clear Library",
+            child: const Icon(Icons.delete_forever),
+            backgroundColor: Colors.redAccent,
+          ),
+          const SizedBox(width: 16),
+          // Add meal button
           FloatingActionButton(
             onPressed: () async {
-              final added = await Navigator.pushNamed(context, AppRouter.addMeal);
-
-              if (added == true) {
-                _fetchMealsFromDb(); // Refresh the list after adding a meal
+              final result = await Navigator.pushNamed(context, AppRouter.addMeal);
+              if (result == true) {
+                _fetchLibraryMeals(); // Refresh the library meals if a new meal was added
               }
             },
+            tooltip: "Add Meal",
             child: const Icon(Icons.add),
           ),
         ],
